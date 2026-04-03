@@ -12,22 +12,23 @@
 :root {
   --bg: #f7f7f5; --surface: #ffffff;
   --border: rgba(0,0,0,0.08); --border-md: rgba(0,0,0,0.15);
-  --text: #1a1a1a; --text-muted: #888; --text-hint: #bbb;
+  --text: #1a1a1a; --text-muted: #666; --text-hint: #aaa;
   --accent: #1a1a1a; --accent-fg: #ffffff;
+  --done-bg: #f0f0ee;
   --radius: 12px; --radius-sm: 8px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #141414; --surface: #1e1e1e;
     --border: rgba(255,255,255,0.08); --border-md: rgba(255,255,255,0.15);
-    --text: #f0f0f0; --text-muted: #777; --text-hint: #444;
+    --text: #f0f0f0; --text-muted: #999; --text-hint: #555;
     --accent: #f0f0f0; --accent-fg: #141414;
+    --done-bg: #252525;
   }
 }
 body { background: var(--bg); color: var(--text); font-family: -apple-system,'Helvetica Neue',sans-serif; min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
 .app { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
 
-/* 헤더 */
 .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
 .header-right { display: flex; align-items: center; gap: 6px; }
@@ -36,14 +37,14 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
 .status-text { font-size: 12px; color: var(--text-muted); }
 .date-label { font-size: 12px; color: var(--text-hint); margin-bottom: 16px; }
 
-/* 필터 바 (오른쪽 상단) */
+/* 필터 바 */
 .filter-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 8px; flex-wrap: wrap; }
-.filter-left { display: flex; align-items: center; gap: 6px; }
-.filter-right { display: flex; align-items: center; gap: 6px; }
+.filter-left { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.filter-right { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
 .filter-btn { padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--border-md); background: transparent; color: var(--text-muted); font-family: inherit; transition: all 0.15s; white-space: nowrap; }
 .filter-btn.active { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
 .toggle-done-btn { padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 0.5px solid var(--border-md); background: transparent; color: var(--text-hint); font-family: inherit; white-space: nowrap; transition: all 0.15s; }
-.toggle-done-btn.showing { color: var(--text-muted); border-color: var(--border-md); }
+.toggle-done-btn.showing { color: var(--text-muted); }
 .add-cat-btn { padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 0.5px dashed var(--border-md); background: transparent; color: var(--text-hint); font-family: inherit; }
 
 /* 새 카테고리 */
@@ -60,33 +61,37 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
 
 /* 항목 추가 */
 .add-row { display: flex; gap: 8px; margin-bottom: 14px; align-items: stretch; }
-.add-row-inputs { flex: 1; display: flex; gap: 6px; }
+.add-row-inputs { flex: 1; display: flex; gap: 6px; min-width: 0; }
 .add-row input[type=text] { flex: 1; font-size: 15px; padding: 11px 14px; border-radius: var(--radius); border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text); font-family: inherit; outline: none; -webkit-appearance: none; min-width: 0; }
 .add-row input[type=text]::placeholder { color: var(--text-hint); }
 .add-row input[type=text]:focus { border-color: var(--accent); }
-.cat-select { font-size: 13px; padding: 0 10px; border-radius: var(--radius); border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text-muted); font-family: inherit; outline: none; -webkit-appearance: none; cursor: pointer; white-space: nowrap; }
-.add-btn { padding: 11px 18px; border-radius: var(--radius); border: none; background: var(--accent); color: var(--accent-fg); font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.cat-select { font-size: 13px; padding: 0 10px; border-radius: var(--radius); border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text-muted); font-family: inherit; outline: none; cursor: pointer; flex-shrink: 0; max-width: 80px; }
+.add-btn { padding: 11px 18px; border-radius: var(--radius); border: none; background: var(--accent); color: var(--accent-fg); font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; }
 
-/* 체크리스트 */
+/* 체크리스트 항목 */
 .checklist { display: flex; flex-direction: column; gap: 6px; }
-.section-label { font-size: 11px; font-weight: 500; color: var(--text-hint); letter-spacing: 0.5px; text-transform: uppercase; margin: 12px 0 4px 2px; }
-.section-label:first-child { margin-top: 0; }
-.item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface); transition: all 0.15s; animation: fadeIn 0.2s ease; }
+.item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface); transition: background 0.2s; animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
-.item.done { opacity: 0.4; }
+.item.done { background: var(--done-bg); border-color: transparent; }
 .checkbox { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border-md); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; background: transparent; }
 .checkbox.checked { background: var(--accent); border-color: var(--accent); }
 .checkmark { width: 10px; height: 7px; border-left: 2px solid var(--accent-fg); border-bottom: 2px solid var(--accent-fg); transform: rotate(-45deg) translate(1px,-1px); display: none; }
 .checkbox.checked .checkmark { display: block; }
 .item-body { flex: 1; min-width: 0; }
 .item-text { font-size: 15px; color: var(--text); line-height: 1.4; }
-.item.done .item-text { text-decoration: line-through; color: var(--text-muted); }
-.item-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.item.done .item-text { color: var(--text-muted); }
+.item-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
 .item-cat-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; border: 0.5px solid var(--border-md); color: var(--text-hint); }
 .item-date { font-size: 11px; color: var(--text-hint); }
-.del-btn { opacity: 0; font-size: 14px; cursor: pointer; color: var(--text-hint); border: none; background: none; padding: 4px 6px; border-radius: 4px; flex-shrink: 0; line-height: 1; }
-.item:hover .del-btn { opacity: 1; }
-@media (max-width: 480px) { .del-btn { opacity: 0.35; } }
+.item-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.del-btn { opacity: 0; font-size: 13px; cursor: pointer; color: var(--text-hint); border: none; background: none; padding: 4px 6px; border-radius: 4px; line-height: 1; transition: opacity 0.15s; }
+.perm-del-btn { opacity: 0; font-size: 11px; cursor: pointer; color: #e53e3e; border: 0.5px solid rgba(229,62,62,0.3); background: none; padding: 3px 7px; border-radius: 10px; line-height: 1; white-space: nowrap; transition: opacity 0.15s; font-family: inherit; }
+.item:hover .del-btn,
+.item:hover .perm-del-btn { opacity: 1; }
+@media (max-width: 480px) {
+  .del-btn { opacity: 0.35; }
+  .perm-del-btn { opacity: 0.35; }
+}
 .empty { text-align: center; padding: 40px 20px; color: var(--text-hint); font-size: 14px; }
 .reset-btn { font-size: 12px; color: var(--text-muted); cursor: pointer; border: 0.5px solid var(--border-md); background: none; padding: 4px 10px; border-radius: 20px; font-family: inherit; }
 </style>
@@ -103,7 +108,6 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
   </div>
   <div class="date-label" id="date-label"></div>
 
-  <!-- 필터 바 -->
   <div class="filter-bar">
     <div class="filter-left">
       <button class="filter-btn active" onclick="setFilter('전체')" id="filter-전체">전체</button>
@@ -115,14 +119,12 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
     </div>
   </div>
 
-  <!-- 새 카테고리 -->
   <div class="new-cat-row" id="new-cat-row">
     <input type="text" id="new-cat-input" placeholder="카테고리 이름" onkeydown="if(event.key==='Enter')addCategory()">
     <button onclick="addCategory()">추가</button>
     <button onclick="hideNewCat()">취소</button>
   </div>
 
-  <!-- 진행률 -->
   <div class="progress-wrap">
     <div class="progress-meta">
       <span id="prog-label">0 / 0 완료</span>
@@ -133,7 +135,6 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
     </div>
   </div>
 
-  <!-- 항목 추가 -->
   <div class="add-row">
     <div class="add-row-inputs">
       <input type="text" id="new-item-input" placeholder="새 항목 추가..." onkeydown="if(event.key==='Enter')addItem()">
@@ -160,7 +161,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let categories = ['업무', '개인'];
-let items = [];          // 전체 항목 배열 (작성 순서)
+let items = [];
 let currentFilter = '전체';
 let showDone = false;
 let unsubscribe = null;
@@ -176,9 +177,6 @@ function setStatus(online) {
 
 function setFilter(cat) {
   currentFilter = cat;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  const el = document.getElementById('filter-' + cat);
-  if (el) el.classList.add('active');
   render();
 }
 
@@ -204,22 +202,25 @@ function addCategory() {
   if (!name || categories.includes(name)) return;
   categories.push(name);
   hideNewCat();
-  renderCatButtons();
-  renderCatSelect();
   save();
+  render();
 }
 
 function renderCatButtons() {
   const wrap = document.getElementById('cat-filter-btns');
   wrap.innerHTML = categories.map(cat => `
     <button class="filter-btn${currentFilter === cat ? ' active' : ''}"
-      onclick="setFilter('${cat}')" id="filter-${cat}">${cat}</button>
+      onclick="setFilter('${escapeHtml(cat)}')" id="filter-${escapeHtml(cat)}">${escapeHtml(cat)}</button>
   `).join('');
+  const allBtn = document.getElementById('filter-전체');
+  if (allBtn) allBtn.className = 'filter-btn' + (currentFilter === '전체' ? ' active' : '');
 }
 
 function renderCatSelect() {
   const sel = document.getElementById('cat-select');
-  sel.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+  const cur = sel.value;
+  sel.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  if (cur && categories.includes(cur)) sel.value = cur;
 }
 
 function addItem() {
@@ -227,8 +228,9 @@ function addItem() {
   const text = input.value.trim();
   if (!text) return;
   const cat = document.getElementById('cat-select').value;
-  const dateStr = new Date().toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }).replace(/ /g,'');
-  items.push({ id: Date.now().toString(), text, done: false, cat, createdAt: dateStr, order: Date.now() });
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }).replace(/ /g,'');
+  items.unshift({ id: Date.now().toString(), text, done: false, cat, createdAt: dateStr, order: Date.now() });
   input.value = '';
   save();
   render();
@@ -239,17 +241,24 @@ function toggleItem(id) {
   if (item) { item.done = !item.done; save(); render(); }
 }
 
-function deleteItem(id) {
-  items = items.filter(i => i.id !== id);
-  save();
-  render();
+// 체크 해제 (초기화용)
+function resetVisible() {
+  getVisible().forEach(item => { item.done = false; });
+  save(); render();
 }
 
-function resetVisible() {
-  const visible = getVisible();
-  visible.forEach(item => { item.done = false; });
-  save();
-  render();
+// 완전 삭제 (확인 후)
+function permDeleteItem(id, text) {
+  if (confirm(`"${text}" 항목을 완전히 삭제할까요?`)) {
+    items = items.filter(i => i.id !== id);
+    save(); render();
+  }
+}
+
+// 체크만 해제 (✕ 버튼)
+function uncheckItem(id) {
+  const item = items.find(i => i.id === id);
+  if (item) { item.done = false; save(); render(); }
 }
 
 function getVisible() {
@@ -261,7 +270,8 @@ function getVisible() {
 }
 
 function escapeHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function render() {
@@ -269,9 +279,7 @@ function render() {
   renderCatSelect();
 
   const visible = getVisible();
-  const allFiltered = currentFilter === '전체'
-    ? items
-    : items.filter(i => i.cat === currentFilter);
+  const allFiltered = currentFilter === '전체' ? items : items.filter(i => i.cat === currentFilter);
   const done = allFiltered.filter(i => i.done).length;
   const total = allFiltered.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
@@ -285,7 +293,6 @@ function render() {
     return;
   }
 
-  // 전체 보기: 그냥 순서대로 / 카테고리 필터: 카테고리 표시 없이
   list.innerHTML = visible.map(item => `
     <div class="item ${item.done ? 'done' : ''}">
       <div class="checkbox ${item.done ? 'checked' : ''}" onclick="toggleItem('${item.id}')">
@@ -298,7 +305,9 @@ function render() {
           ${item.createdAt ? `<span class="item-date">${item.createdAt}</span>` : ''}
         </div>
       </div>
-      <button class="del-btn" onclick="deleteItem('${item.id}')">✕</button>
+      <div class="item-actions">
+        <button class="perm-del-btn" onclick="permDeleteItem('${item.id}', '${escapeHtml(item.text)}')">삭제</button>
+      </div>
     </div>
   `).join('');
 }
@@ -317,24 +326,22 @@ function load() {
       if (doc.exists) {
         const d = doc.data();
         if (d.categories) categories = d.categories;
-        if (d.items) items = d.items;
-        // 구버전 데이터(data 형식) 마이그레이션
-        else if (d.data) {
+        if (d.items) {
+          items = d.items;
+        } else if (d.data) {
           items = [];
           Object.entries(d.data).forEach(([cat, arr]) => {
             (arr || []).forEach(it => {
               items.push({ ...it, cat, order: parseInt(it.id) || 0 });
             });
           });
-          items.sort((a, b) => a.order - b.order);
+          items.sort((a, b) => (b.order || 0) - (a.order || 0));
         }
       }
       render();
     }, () => { setStatus(false); render(); });
 }
 
-renderCatButtons();
-renderCatSelect();
 render();
 load();
 </script>
