@@ -78,11 +78,12 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
 .checkmark { width: 10px; height: 7px; border-left: 2px solid var(--accent-fg); border-bottom: 2px solid var(--accent-fg); transform: rotate(-45deg) translate(1px,-1px); display: none; }
 .checkbox.checked .checkmark { display: block; }
 .item-body { flex: 1; min-width: 0; }
+.item-title-row { display: flex; align-items: baseline; gap: 8px; }
 .item-text { font-size: 15px; color: var(--text); line-height: 1.4; }
 .item.done .item-text { color: var(--text-muted); }
+.item-date { font-size: 15px; color: var(--text-hint); font-style: italic; white-space: nowrap; flex-shrink: 0; }
 .item-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
 .item-cat-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; border: 0.5px solid var(--border-md); color: var(--text-hint); }
-.item-date { font-size: 11px; color: var(--text-hint); }
 .item-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
 .del-btn { opacity: 0; font-size: 13px; cursor: pointer; color: var(--text-hint); border: none; background: none; padding: 4px 6px; border-radius: 4px; line-height: 1; transition: opacity 0.15s; }
 .perm-del-btn { opacity: 0; font-size: 11px; cursor: pointer; color: #e53e3e; border: 0.5px solid rgba(229,62,62,0.3); background: none; padding: 3px 7px; border-radius: 10px; line-height: 1; white-space: nowrap; transition: opacity 0.15s; font-family: inherit; }
@@ -299,10 +300,12 @@ function render() {
         <div class="checkmark"></div>
       </div>
       <div class="item-body">
-        <div class="item-text">${escapeHtml(item.text)}</div>
+        <div class="item-title-row">
+          <div class="item-text">${escapeHtml(item.text)}</div>
+          ${item.createdAt ? `<span class="item-date">${item.createdAt}</span>` : ''}
+        </div>
         <div class="item-meta">
           ${currentFilter === '전체' ? `<span class="item-cat-badge">${escapeHtml(item.cat)}</span>` : ''}
-          ${item.createdAt ? `<span class="item-date">${item.createdAt}</span>` : ''}
         </div>
       </div>
       <div class="item-actions">
