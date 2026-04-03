@@ -14,6 +14,7 @@
   --border: rgba(0,0,0,0.08); --border-md: rgba(0,0,0,0.15);
   --text: #1a1a1a; --text-muted: #666; --text-hint: #aaa;
   --accent: #1a1a1a; --accent-fg: #ffffff;
+  --inprogress-bg: #fff8e6; --inprogress-border: #f0c040;
   --done-bg: #f0f0ee;
   --radius: 12px; --radius-sm: 8px;
 }
@@ -23,6 +24,7 @@
     --border: rgba(255,255,255,0.08); --border-md: rgba(255,255,255,0.15);
     --text: #f0f0f0; --text-muted: #999; --text-hint: #555;
     --accent: #f0f0f0; --accent-fg: #141414;
+    --inprogress-bg: #2a2410; --inprogress-border: #b8901e;
     --done-bg: #252525;
   }
 }
@@ -68,15 +70,33 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
 .cat-select { font-size: 13px; padding: 0 10px; border-radius: var(--radius); border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text-muted); font-family: inherit; outline: none; cursor: pointer; flex-shrink: 0; max-width: 80px; }
 .add-btn { padding: 11px 18px; border-radius: var(--radius); border: none; background: var(--accent); color: var(--accent-fg); font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; }
 
-/* 체크리스트 항목 */
+/* 범례 */
+.legend { display: flex; gap: 14px; margin-bottom: 14px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-hint); }
+
+/* 체크리스트 */
 .checklist { display: flex; flex-direction: column; gap: 6px; }
-.item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface); transition: background 0.2s; animation: fadeIn 0.2s ease; }
+.item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface); transition: background 0.2s, border-color 0.2s; animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+.item.inprogress { background: var(--inprogress-bg); border-color: var(--inprogress-border); }
 .item.done { background: var(--done-bg); border-color: transparent; }
-.checkbox { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border-md); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; background: transparent; }
-.checkbox.checked { background: var(--accent); border-color: var(--accent); }
-.checkmark { width: 10px; height: 7px; border-left: 2px solid var(--accent-fg); border-bottom: 2px solid var(--accent-fg); transform: rotate(-45deg) translate(1px,-1px); display: none; }
-.checkbox.checked .checkmark { display: block; }
+
+/* 버튼 컨테이너 */
+.btn-pair { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* 동그라미 버튼 (진행 중) */
+.circle-btn { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: transparent; flex-shrink: 0; }
+.circle-btn.active { background: #f0c040; border-color: #f0c040; }
+.circle-dot { width: 8px; height: 8px; border-radius: 50%; background: #ffffff; display: none; }
+.circle-btn.active .circle-dot { display: block; }
+
+/* 네모 버튼 (완료) */
+.square-btn { width: 22px; height: 22px; border-radius: 4px; border: 1.5px solid var(--border-md); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: transparent; flex-shrink: 0; }
+.square-btn.active { background: var(--accent); border-color: var(--accent); }
+.square-check { width: 10px; height: 7px; border-left: 2px solid var(--accent-fg); border-bottom: 2px solid var(--accent-fg); transform: rotate(-45deg) translate(1px,-1px); display: none; }
+.square-btn.active .square-check { display: block; }
+
+/* 항목 내용 */
 .item-body { flex: 1; min-width: 0; }
 .item-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .item-text { font-size: 15px; color: var(--text); line-height: 1.4; flex: 1; }
@@ -84,15 +104,12 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
 .item-date { font-size: 15px; color: var(--text-hint); font-style: italic; white-space: nowrap; flex-shrink: 0; }
 .item-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
 .item-cat-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; border: 0.5px solid var(--border-md); color: var(--text-hint); }
-.item-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
-.del-btn { opacity: 0; font-size: 13px; cursor: pointer; color: var(--text-hint); border: none; background: none; padding: 4px 6px; border-radius: 4px; line-height: 1; transition: opacity 0.15s; }
-.perm-del-btn { opacity: 0; font-size: 11px; cursor: pointer; color: #e53e3e; border: 0.5px solid rgba(229,62,62,0.3); background: none; padding: 3px 7px; border-radius: 10px; line-height: 1; white-space: nowrap; transition: opacity 0.15s; font-family: inherit; }
-.item:hover .del-btn,
+
+/* 삭제 버튼 */
+.perm-del-btn { opacity: 0; font-size: 11px; cursor: pointer; color: #e53e3e; border: 0.5px solid rgba(229,62,62,0.3); background: none; padding: 3px 7px; border-radius: 10px; line-height: 1; white-space: nowrap; transition: opacity 0.15s; font-family: inherit; flex-shrink: 0; }
 .item:hover .perm-del-btn { opacity: 1; }
-@media (max-width: 480px) {
-  .del-btn { opacity: 0.35; }
-  .perm-del-btn { opacity: 0.35; }
-}
+@media (max-width: 480px) { .perm-del-btn { opacity: 0.35; } }
+
 .empty { text-align: center; padding: 40px 20px; color: var(--text-hint); font-size: 14px; }
 .reset-btn { font-size: 12px; color: var(--text-muted); cursor: pointer; border: 0.5px solid var(--border-md); background: none; padding: 4px 10px; border-radius: 20px; font-family: inherit; }
 </style>
@@ -124,6 +141,22 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
     <input type="text" id="new-cat-input" placeholder="카테고리 이름" onkeydown="if(event.key==='Enter')addCategory()">
     <button onclick="addCategory()">추가</button>
     <button onclick="hideNewCat()">취소</button>
+  </div>
+
+  <!-- 범례 -->
+  <div class="legend">
+    <div class="legend-item">
+      <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #f0c040;background:#f0c040;display:flex;align-items:center;justify-content:center;">
+        <div style="width:6px;height:6px;border-radius:50%;background:#fff;"></div>
+      </div>
+      <span>진행 중</span>
+    </div>
+    <div class="legend-item">
+      <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid #1a1a1a;background:#1a1a1a;display:flex;align-items:center;justify-content:center;">
+        <div style="width:8px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px);"></div>
+      </div>
+      <span>완료</span>
+    </div>
   </div>
 
   <div class="progress-wrap">
@@ -211,7 +244,7 @@ function renderCatButtons() {
   const wrap = document.getElementById('cat-filter-btns');
   wrap.innerHTML = categories.map(cat => `
     <button class="filter-btn${currentFilter === cat ? ' active' : ''}"
-      onclick="setFilter('${escapeHtml(cat)}')" id="filter-${escapeHtml(cat)}">${escapeHtml(cat)}</button>
+      onclick="setFilter('${escapeHtml(cat)}')">${escapeHtml(cat)}</button>
   `).join('');
   const allBtn = document.getElementById('filter-전체');
   if (allBtn) allBtn.className = 'filter-btn' + (currentFilter === '전체' ? ' active' : '');
@@ -229,26 +262,43 @@ function addItem() {
   const text = input.value.trim();
   if (!text) return;
   const cat = document.getElementById('cat-select').value;
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }).replace(/ /g,'');
-  items.unshift({ id: Date.now().toString(), text, done: false, cat, createdAt: dateStr, order: Date.now() });
+  const dateStr = new Date().toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }).replace(/ /g,'');
+  // status: 'none' | 'inprogress' | 'done'
+  items.unshift({ id: Date.now().toString(), text, status: 'none', cat, createdAt: dateStr, order: Date.now() });
   input.value = '';
   save();
   render();
 }
 
-function toggleItem(id) {
+// 동그라미 클릭 → 진행 중 토글
+function toggleInProgress(id) {
   const item = items.find(i => i.id === id);
-  if (item) { item.done = !item.done; save(); render(); }
-}
-
-// 체크 해제 (초기화용)
-function resetVisible() {
-  getVisible().forEach(item => { item.done = false; });
+  if (!item) return;
+  if (item.status === 'inprogress') {
+    item.status = 'none';
+  } else {
+    item.status = 'inprogress';  // done 상태에서도 진행 중으로 되돌릴 수 있음
+  }
   save(); render();
 }
 
-// 완전 삭제 (확인 후)
+// 네모 클릭 → 완료 토글
+function toggleDone(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  if (item.status === 'done') {
+    item.status = 'none';
+  } else {
+    item.status = 'done';
+  }
+  save(); render();
+}
+
+function resetVisible() {
+  getVisible().forEach(item => { item.status = 'none'; });
+  save(); render();
+}
+
 function permDeleteItem(id, text) {
   if (confirm(`"${text}" 항목을 완전히 삭제할까요?`)) {
     items = items.filter(i => i.id !== id);
@@ -256,16 +306,10 @@ function permDeleteItem(id, text) {
   }
 }
 
-// 체크만 해제 (✕ 버튼)
-function uncheckItem(id) {
-  const item = items.find(i => i.id === id);
-  if (item) { item.done = false; save(); render(); }
-}
-
 function getVisible() {
   return items.filter(item => {
     if (currentFilter !== '전체' && item.cat !== currentFilter) return false;
-    if (!showDone && item.done) return false;
+    if (!showDone && item.status === 'done') return false;
     return true;
   });
 }
@@ -279,25 +323,33 @@ function render() {
   renderCatButtons();
   renderCatSelect();
 
-  const visible = getVisible();
   const allFiltered = currentFilter === '전체' ? items : items.filter(i => i.cat === currentFilter);
-  const done = allFiltered.filter(i => i.done).length;
+  const doneCount = allFiltered.filter(i => i.status === 'done').length;
   const total = allFiltered.length;
-  const pct = total ? Math.round((done / total) * 100) : 0;
-  document.getElementById('prog-label').textContent = `${done} / ${total} 완료`;
+  const pct = total ? Math.round((doneCount / total) * 100) : 0;
+  document.getElementById('prog-label').textContent = `${doneCount} / ${total} 완료`;
   document.getElementById('prog-pct').textContent = `${pct}%`;
   document.getElementById('prog-fill').style.width = pct + '%';
 
+  const visible = getVisible();
   const list = document.getElementById('checklist');
   if (!visible.length) {
     list.innerHTML = '<div class="empty">항목을 추가해 보세요</div>';
     return;
   }
 
-  list.innerHTML = visible.map(item => `
-    <div class="item ${item.done ? 'done' : ''}">
-      <div class="checkbox ${item.done ? 'checked' : ''}" onclick="toggleItem('${item.id}')">
-        <div class="checkmark"></div>
+  list.innerHTML = visible.map(item => {
+    const isInProgress = item.status === 'inprogress';
+    const isDone = item.status === 'done';
+    return `
+    <div class="item ${isDone ? 'done' : isInProgress ? 'inprogress' : ''}">
+      <div class="btn-pair">
+        <div class="circle-btn ${isInProgress ? 'active' : ''}" onclick="toggleInProgress('${item.id}')" title="진행 중">
+          <div class="circle-dot"></div>
+        </div>
+        <div class="square-btn ${isDone ? 'active' : ''}" onclick="toggleDone('${item.id}')" title="완료">
+          <div class="square-check"></div>
+        </div>
       </div>
       <div class="item-body">
         <div class="item-title-row">
@@ -308,11 +360,9 @@ function render() {
           ${currentFilter === '전체' ? `<span class="item-cat-badge">${escapeHtml(item.cat)}</span>` : ''}
         </div>
       </div>
-      <div class="item-actions">
-        <button class="perm-del-btn" onclick="permDeleteItem('${item.id}', '${escapeHtml(item.text)}')">삭제</button>
-      </div>
+      <button class="perm-del-btn" onclick="permDeleteItem('${item.id}','${escapeHtml(item.text)}')">삭제</button>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 function save() {
@@ -330,12 +380,18 @@ function load() {
         const d = doc.data();
         if (d.categories) categories = d.categories;
         if (d.items) {
-          items = d.items;
+          // 구버전(done: boolean) → 신버전(status: string) 마이그레이션
+          items = d.items.map(it => {
+            if (it.status === undefined) {
+              return { ...it, status: it.done ? 'done' : 'none' };
+            }
+            return it;
+          });
         } else if (d.data) {
           items = [];
           Object.entries(d.data).forEach(([cat, arr]) => {
             (arr || []).forEach(it => {
-              items.push({ ...it, cat, order: parseInt(it.id) || 0 });
+              items.push({ ...it, cat, status: it.done ? 'done' : 'none', order: parseInt(it.id) || 0 });
             });
           });
           items.sort((a, b) => (b.order || 0) - (a.order || 0));
