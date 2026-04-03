@@ -78,8 +78,8 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
 .checkmark { width: 10px; height: 7px; border-left: 2px solid var(--accent-fg); border-bottom: 2px solid var(--accent-fg); transform: rotate(-45deg) translate(1px,-1px); display: none; }
 .checkbox.checked .checkmark { display: block; }
 .item-body { flex: 1; min-width: 0; }
-.item-title-row { display: flex; align-items: baseline; gap: 8px; }
-.item-text { font-size: 15px; color: var(--text); line-height: 1.4; }
+.item-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.item-text { font-size: 15px; color: var(--text); line-height: 1.4; flex: 1; }
 .item.done .item-text { color: var(--text-muted); }
 .item-date { font-size: 15px; color: var(--text-hint); font-style: italic; white-space: nowrap; flex-shrink: 0; }
 .item-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
