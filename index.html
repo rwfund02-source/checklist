@@ -199,7 +199,7 @@ let items = [];
 let currentFilter = '전체';
 let showDone = false;
 let unsubscribe = null;
-const today = new Date().toISOString().slice(0, 10);
+const today = 'my-checklist';
 
 document.getElementById('date-label').textContent =
   new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
