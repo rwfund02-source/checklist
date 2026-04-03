@@ -1,4 +1,345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="체크리스트">
+<title>내 체크리스트</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #f7f7f5; --surface: #ffffff;
+  --border: rgba(0,0,0,0.08); --border-md: rgba(0,0,0,0.15);
+  --text: #1a1a1a; --text-muted: #888; --text-hint: #bbb;
+  --accent: #1a1a1a; --accent-fg: #ffffff;
+  --radius: 12px; --radius-sm: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141414; --surface: #1e1e1e;
+    --border: rgba(255,255,255,0.08); --border-md: rgba(255,255,255,0.15);
+    --text: #f0f0f0; --text-muted: #777; --text-hint: #444;
+    --accent: #f0f0f0; --accent-fg: #141414;
+  }
+}
+body { background: var(--bg); color: var(--text); font-family: -apple-system,'Helvetica Neue',sans-serif; min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
+.app { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
 
+/* 헤더 */
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+.header-right { display: flex; align-items: center; gap: 6px; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-hint); transition: background 0.3s; }
+.status-dot.online { background: #2e7d52; }
+.status-text { font-size: 12px; color: var(--text-muted); }
+.date-label { font-size: 12px; color: var(--text-hint); margin-bottom: 16px; }
+
+/* 필터 바 (오른쪽 상단) */
+.filter-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 8px; flex-wrap: wrap; }
+.filter-left { display: flex; align-items: center; gap: 6px; }
+.filter-right { display: flex; align-items: center; gap: 6px; }
+.filter-btn { padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--border-md); background: transparent; color: var(--text-muted); font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+.filter-btn.active { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+.toggle-done-btn { padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 0.5px solid var(--border-md); background: transparent; color: var(--text-hint); font-family: inherit; white-space: nowrap; transition: all 0.15s; }
+.toggle-done-btn.showing { color: var(--text-muted); border-color: var(--border-md); }
+.add-cat-btn { padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 0.5px dashed var(--border-md); background: transparent; color: var(--text-hint); font-family: inherit; }
+
+/* 새 카테고리 */
+.new-cat-row { display: none; gap: 8px; margin-bottom: 14px; }
+.new-cat-row.show { display: flex; }
+.new-cat-row input { flex: 1; font-size: 14px; padding: 8px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text); font-family: inherit; outline: none; }
+.new-cat-row button { padding: 8px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-md); background: transparent; color: var(--text); font-size: 13px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+
+/* 진행률 */
+.progress-wrap { margin-bottom: 14px; }
+.progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+.progress-track { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.35s ease; }
+
+/* 항목 추가 */
+.add-row { display: flex; gap: 8px; margin-bottom: 14px; align-items: stretch; }
+.add-row-inputs { flex: 1; display: flex; gap: 6px; }
+.add-row input[type=text] { flex: 1; font-size: 15px; padding: 11px 14px; border-radius: var(--radius); border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text); font-family: inherit; outline: none; -webkit-appearance: none; min-width: 0; }
+.add-row input[type=text]::placeholder { color: var(--text-hint); }
+.add-row input[type=text]:focus { border-color: var(--accent); }
+.cat-select { font-size: 13px; padding: 0 10px; border-radius: var(--radius); border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text-muted); font-family: inherit; outline: none; -webkit-appearance: none; cursor: pointer; white-space: nowrap; }
+.add-btn { padding: 11px 18px; border-radius: var(--radius); border: none; background: var(--accent); color: var(--accent-fg); font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; }
+
+/* 체크리스트 */
+.checklist { display: flex; flex-direction: column; gap: 6px; }
+.section-label { font-size: 11px; font-weight: 500; color: var(--text-hint); letter-spacing: 0.5px; text-transform: uppercase; margin: 12px 0 4px 2px; }
+.section-label:first-child { margin-top: 0; }
+.item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius); border: 0.5px solid var(--border); background: var(--surface); transition: all 0.15s; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+.item.done { opacity: 0.4; }
+.checkbox { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border-md); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; background: transparent; }
+.checkbox.checked { background: var(--accent); border-color: var(--accent); }
+.checkmark { width: 10px; height: 7px; border-left: 2px solid var(--accent-fg); border-bottom: 2px solid var(--accent-fg); transform: rotate(-45deg) translate(1px,-1px); display: none; }
+.checkbox.checked .checkmark { display: block; }
+.item-body { flex: 1; min-width: 0; }
+.item-text { font-size: 15px; color: var(--text); line-height: 1.4; }
+.item.done .item-text { text-decoration: line-through; color: var(--text-muted); }
+.item-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.item-cat-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; border: 0.5px solid var(--border-md); color: var(--text-hint); }
+.item-date { font-size: 11px; color: var(--text-hint); }
+.del-btn { opacity: 0; font-size: 14px; cursor: pointer; color: var(--text-hint); border: none; background: none; padding: 4px 6px; border-radius: 4px; flex-shrink: 0; line-height: 1; }
+.item:hover .del-btn { opacity: 1; }
+@media (max-width: 480px) { .del-btn { opacity: 0.35; } }
+.empty { text-align: center; padding: 40px 20px; color: var(--text-hint); font-size: 14px; }
+.reset-btn { font-size: 12px; color: var(--text-muted); cursor: pointer; border: 0.5px solid var(--border-md); background: none; padding: 4px 10px; border-radius: 20px; font-family: inherit; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>체크리스트</h1>
+    <div class="header-right">
+      <div class="status-dot" id="status-dot"></div>
+      <span class="status-text" id="status-text">연결 중</span>
+      <button class="reset-btn" onclick="resetVisible()">초기화</button>
+    </div>
+  </div>
+  <div class="date-label" id="date-label"></div>
+
+  <!-- 필터 바 -->
+  <div class="filter-bar">
+    <div class="filter-left">
+      <button class="filter-btn active" onclick="setFilter('전체')" id="filter-전체">전체</button>
+      <span id="cat-filter-btns"></span>
+      <button class="add-cat-btn" onclick="showNewCat()">+ 카테고리</button>
+    </div>
+    <div class="filter-right">
+      <button class="toggle-done-btn" id="toggle-done-btn" onclick="toggleShowDone()">완료 숨김</button>
+    </div>
+  </div>
+
+  <!-- 새 카테고리 -->
+  <div class="new-cat-row" id="new-cat-row">
+    <input type="text" id="new-cat-input" placeholder="카테고리 이름" onkeydown="if(event.key==='Enter')addCategory()">
+    <button onclick="addCategory()">추가</button>
+    <button onclick="hideNewCat()">취소</button>
+  </div>
+
+  <!-- 진행률 -->
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="prog-label">0 / 0 완료</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- 항목 추가 -->
+  <div class="add-row">
+    <div class="add-row-inputs">
+      <input type="text" id="new-item-input" placeholder="새 항목 추가..." onkeydown="if(event.key==='Enter')addItem()">
+      <select class="cat-select" id="cat-select"></select>
+    </div>
+    <button class="add-btn" onclick="addItem()">추가</button>
+  </div>
+
+  <div class="checklist" id="checklist"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDMg-MOtRaCGjxUV_D5HsViC1-QIz0cbfc",
+  authDomain: "my-checklist-1d462.firebaseapp.com",
+  projectId: "my-checklist-1d462",
+  storageBucket: "my-checklist-1d462.firebasestorage.app",
+  messagingSenderId: "317489669655",
+  appId: "1:317489669655:web:13613cec58ffe3f0b19e52"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let categories = ['업무', '개인'];
+let items = [];          // 전체 항목 배열 (작성 순서)
+let currentFilter = '전체';
+let showDone = false;
+let unsubscribe = null;
+const today = new Date().toISOString().slice(0, 10);
+
+document.getElementById('date-label').textContent =
+  new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+
+function setStatus(online) {
+  document.getElementById('status-dot').className = 'status-dot' + (online ? ' online' : '');
+  document.getElementById('status-text').textContent = online ? '동기화됨' : '오프라인';
+}
+
+function setFilter(cat) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('filter-' + cat);
+  if (el) el.classList.add('active');
+  render();
+}
+
+function toggleShowDone() {
+  showDone = !showDone;
+  const btn = document.getElementById('toggle-done-btn');
+  btn.textContent = showDone ? '완료 표시 중' : '완료 숨김';
+  btn.className = 'toggle-done-btn' + (showDone ? ' showing' : '');
+  render();
+}
+
+function showNewCat() {
+  document.getElementById('new-cat-row').classList.add('show');
+  document.getElementById('new-cat-input').focus();
+}
+function hideNewCat() {
+  document.getElementById('new-cat-row').classList.remove('show');
+  document.getElementById('new-cat-input').value = '';
+}
+
+function addCategory() {
+  const name = document.getElementById('new-cat-input').value.trim();
+  if (!name || categories.includes(name)) return;
+  categories.push(name);
+  hideNewCat();
+  renderCatButtons();
+  renderCatSelect();
+  save();
+}
+
+function renderCatButtons() {
+  const wrap = document.getElementById('cat-filter-btns');
+  wrap.innerHTML = categories.map(cat => `
+    <button class="filter-btn${currentFilter === cat ? ' active' : ''}"
+      onclick="setFilter('${cat}')" id="filter-${cat}">${cat}</button>
+  `).join('');
+}
+
+function renderCatSelect() {
+  const sel = document.getElementById('cat-select');
+  sel.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function addItem() {
+  const input = document.getElementById('new-item-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const cat = document.getElementById('cat-select').value;
+  const dateStr = new Date().toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }).replace(/ /g,'');
+  items.push({ id: Date.now().toString(), text, done: false, cat, createdAt: dateStr, order: Date.now() });
+  input.value = '';
+  save();
+  render();
+}
+
+function toggleItem(id) {
+  const item = items.find(i => i.id === id);
+  if (item) { item.done = !item.done; save(); render(); }
+}
+
+function deleteItem(id) {
+  items = items.filter(i => i.id !== id);
+  save();
+  render();
+}
+
+function resetVisible() {
+  const visible = getVisible();
+  visible.forEach(item => { item.done = false; });
+  save();
+  render();
+}
+
+function getVisible() {
+  return items.filter(item => {
+    if (currentFilter !== '전체' && item.cat !== currentFilter) return false;
+    if (!showDone && item.done) return false;
+    return true;
+  });
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function render() {
+  renderCatButtons();
+  renderCatSelect();
+
+  const visible = getVisible();
+  const allFiltered = currentFilter === '전체'
+    ? items
+    : items.filter(i => i.cat === currentFilter);
+  const done = allFiltered.filter(i => i.done).length;
+  const total = allFiltered.length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('prog-label').textContent = `${done} / ${total} 완료`;
+  document.getElementById('prog-pct').textContent = `${pct}%`;
+  document.getElementById('prog-fill').style.width = pct + '%';
+
+  const list = document.getElementById('checklist');
+  if (!visible.length) {
+    list.innerHTML = '<div class="empty">항목을 추가해 보세요</div>';
+    return;
+  }
+
+  // 전체 보기: 그냥 순서대로 / 카테고리 필터: 카테고리 표시 없이
+  list.innerHTML = visible.map(item => `
+    <div class="item ${item.done ? 'done' : ''}">
+      <div class="checkbox ${item.done ? 'checked' : ''}" onclick="toggleItem('${item.id}')">
+        <div class="checkmark"></div>
+      </div>
+      <div class="item-body">
+        <div class="item-text">${escapeHtml(item.text)}</div>
+        <div class="item-meta">
+          ${currentFilter === '전체' ? `<span class="item-cat-badge">${escapeHtml(item.cat)}</span>` : ''}
+          ${item.createdAt ? `<span class="item-date">${item.createdAt}</span>` : ''}
+        </div>
+      </div>
+      <button class="del-btn" onclick="deleteItem('${item.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function save() {
+  db.collection('checklists').doc(today).set({ items, categories })
+    .then(() => setStatus(true))
+    .catch(() => setStatus(false));
+}
+
+function load() {
+  if (unsubscribe) unsubscribe();
+  unsubscribe = db.collection('checklists').doc(today)
+    .onSnapshot(doc => {
+      setStatus(true);
+      if (doc.exists) {
+        const d = doc.data();
+        if (d.categories) categories = d.categories;
+        if (d.items) items = d.items;
+        // 구버전 데이터(data 형식) 마이그레이션
+        else if (d.data) {
+          items = [];
+          Object.entries(d.data).forEach(([cat, arr]) => {
+            (arr || []).forEach(it => {
+              items.push({ ...it, cat, order: parseInt(it.id) || 0 });
+            });
+          });
+          items.sort((a, b) => a.order - b.order);
+        }
+      }
+      render();
+    }, () => { setStatus(false); render(); });
+}
+
+renderCatButtons();
+renderCatSelect();
+render();
+load();
+</script>
+</body>
+</html>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
