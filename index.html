@@ -16,6 +16,9 @@
   --accent: #1a1a1a; --accent-fg: #ffffff;
   --inprogress-bg: #fff8e6; --inprogress-border: #f0c040;
   --done-bg: #f0f0ee;
+  --aged-1w-bg: #e8f4fd; --aged-1w-border: #b3d9f5;
+  --aged-2w-bg: #bde0f7; --aged-2w-border: #7dc0ee;
+  --aged-1m-bg: #7ab8e8; --aged-1m-border: #3d8cc4;
   --radius: 12px; --radius-sm: 8px;
 }
 @media (prefers-color-scheme: dark) {
@@ -26,6 +29,9 @@
     --accent: #f0f0f0; --accent-fg: #141414;
     --inprogress-bg: #2a2410; --inprogress-border: #b8901e;
     --done-bg: #252525;
+    --aged-1w-bg: #0d2233; --aged-1w-border: #1e4a6e;
+    --aged-2w-bg: #0a2d45; --aged-2w-border: #2060a0;
+    --aged-1m-bg: #09263d; --aged-1m-border: #1a5080;
   }
 }
 body { background: var(--bg); color: var(--text); font-family: -apple-system,'Helvetica Neue',sans-serif; min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
@@ -80,6 +86,9 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
 @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
 .item.inprogress { background: var(--inprogress-bg); border-color: var(--inprogress-border); }
 .item.done { background: var(--done-bg); border-color: transparent; }
+.item.aged-1w { background: var(--aged-1w-bg); border-color: var(--aged-1w-border); }
+.item.aged-2w { background: var(--aged-2w-bg); border-color: var(--aged-2w-border); }
+.item.aged-1m { background: var(--aged-1m-bg); border-color: var(--aged-1m-border); }
 
 /* 버튼 컨테이너 */
 .btn-pair { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
@@ -157,6 +166,18 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
       </div>
       <span>완료</span>
     </div>
+    <div class="legend-item">
+      <div style="width:16px;height:16px;border-radius:3px;background:#e8f4fd;border:1.5px solid #b3d9f5;"></div>
+      <span>1주+</span>
+    </div>
+    <div class="legend-item">
+      <div style="width:16px;height:16px;border-radius:3px;background:#bde0f7;border:1.5px solid #7dc0ee;"></div>
+      <span>2주+</span>
+    </div>
+    <div class="legend-item">
+      <div style="width:16px;height:16px;border-radius:3px;background:#7ab8e8;border:1.5px solid #3d8cc4;"></div>
+      <span>1달+</span>
+    </div>
   </div>
 
   <div class="progress-wrap">
@@ -199,7 +220,7 @@ let items = [];
 let currentFilter = '전체';
 let showDone = false;
 let unsubscribe = null;
-const today = 'my-checklist';
+const today = new Date().toISOString().slice(0, 10);
 
 document.getElementById('date-label').textContent =
   new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
@@ -262,9 +283,11 @@ function addItem() {
   const text = input.value.trim();
   if (!text) return;
   const cat = document.getElementById('cat-select').value;
-  const dateStr = new Date().toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }).replace(/ /g,'');
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }).replace(/ /g,'');
+  const createdAtISO = now.toISOString().slice(0, 10);
   // status: 'none' | 'inprogress' | 'done'
-  items.unshift({ id: Date.now().toString(), text, status: 'none', cat, createdAt: dateStr, order: Date.now() });
+  items.unshift({ id: Date.now().toString(), text, status: 'none', cat, createdAt: dateStr, createdAtISO, order: Date.now() });
   input.value = '';
   save();
   render();
@@ -314,6 +337,21 @@ function getVisible() {
   });
 }
 
+// 경과일 기반 색상 클래스 반환 (완료/진행 중 항목엔 적용 안 함)
+function getAgedClass(item) {
+  if (item.status === 'done' || item.status === 'inprogress') return '';
+  const dateStr = item.createdAtISO || null;
+  if (!dateStr) return '';
+  const created = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((today - created) / (1000 * 60 * 60 * 24));
+  if (diffDays >= 30) return 'aged-1m';
+  if (diffDays >= 14) return 'aged-2w';
+  if (diffDays >= 7)  return 'aged-1w';
+  return '';
+}
+
 function escapeHtml(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -341,8 +379,10 @@ function render() {
   list.innerHTML = visible.map(item => {
     const isInProgress = item.status === 'inprogress';
     const isDone = item.status === 'done';
+    const agedClass = getAgedClass(item);
+    const itemClass = isDone ? 'done' : isInProgress ? 'inprogress' : agedClass;
     return `
-    <div class="item ${isDone ? 'done' : isInProgress ? 'inprogress' : ''}">
+    <div class="item ${itemClass}">
       <div class="btn-pair">
         <div class="circle-btn ${isInProgress ? 'active' : ''}" onclick="toggleInProgress('${item.id}')" title="진행 중">
           <div class="circle-dot"></div>
