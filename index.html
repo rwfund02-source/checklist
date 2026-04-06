@@ -77,7 +77,7 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
 .add-btn { padding: 11px 18px; border-radius: var(--radius); border: none; background: var(--accent); color: var(--accent-fg); font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; }
 
 /* 범례 */
-.legend { display: flex; gap: 14px; margin-bottom: 14px; }
+.legend { display: flex; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
 .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-hint); }
 
 /* 체크리스트 */
@@ -108,11 +108,21 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
 /* 항목 내용 */
 .item-body { flex: 1; min-width: 0; }
 .item-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.item-text { font-size: 15px; color: var(--text); line-height: 1.4; flex: 1; }
+.item-text { font-size: 15px; color: var(--text); line-height: 1.4; flex: 1; cursor: pointer; }
+.item-text:hover { opacity: 0.7; }
 .item.done .item-text { color: var(--text-muted); }
 .item-date { font-size: 15px; color: var(--text-hint); font-style: italic; white-space: nowrap; flex-shrink: 0; }
 .item-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
 .item-cat-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; border: 0.5px solid var(--border-md); color: var(--text-hint); }
+
+/* 인라인 편집 입력창 */
+.item-edit-input {
+  flex: 1; font-size: 15px; padding: 2px 6px;
+  border-radius: 6px; border: 1.5px solid var(--accent);
+  background: var(--surface); color: var(--text);
+  font-family: inherit; outline: none;
+  -webkit-appearance: none;
+}
 
 /* 삭제 버튼 */
 .perm-del-btn { opacity: 0; font-size: 11px; cursor: pointer; color: #e53e3e; border: 0.5px solid rgba(229,62,62,0.3); background: none; padding: 3px 7px; border-radius: 10px; line-height: 1; white-space: nowrap; transition: opacity 0.15s; font-family: inherit; flex-shrink: 0; }
@@ -130,7 +140,6 @@ body { background: var(--bg); color: var(--text); font-family: -apple-system,'He
     <div class="header-right">
       <div class="status-dot" id="status-dot"></div>
       <span class="status-text" id="status-text">연결 중</span>
-      
     </div>
   </div>
   <div class="date-label" id="date-label"></div>
@@ -220,7 +229,7 @@ let items = [];
 let currentFilter = '전체';
 let showDone = false;
 let unsubscribe = null;
-const today = 'my-checklist'
+const today = 'my-checklist';
 
 document.getElementById('date-label').textContent =
   new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
@@ -286,22 +295,60 @@ function addItem() {
   const now = new Date();
   const dateStr = now.toLocaleDateString('ko-KR', { month:'2-digit', day:'2-digit' }).replace(/ /g,'');
   const createdAtISO = now.toISOString().slice(0, 10);
-  // status: 'none' | 'inprogress' | 'done'
   items.unshift({ id: Date.now().toString(), text, status: 'none', cat, createdAt: dateStr, createdAtISO, order: Date.now() });
   input.value = '';
   save();
   render();
 }
 
+// 항목 텍스트 더블클릭(또는 모바일 길게 누르기) → 인라인 편집
+function startEdit(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const textEl = document.getElementById('item-text-' + id);
+  if (!textEl) return;
+
+  // 이미 편집 중이면 무시
+  if (textEl.querySelector('.item-edit-input')) return;
+
+  const originalText = item.text;
+  textEl.innerHTML = `
+    <input class="item-edit-input" id="edit-input-${id}"
+      value="${escapeHtml(originalText)}"
+      onkeydown="handleEditKey(event, '${id}')"
+      onblur="finishEdit('${id}')"
+    >
+  `;
+  const inp = document.getElementById('edit-input-' + id);
+  inp.focus();
+  inp.select();
+}
+
+function handleEditKey(e, id) {
+  if (e.key === 'Enter') { finishEdit(id); }
+  if (e.key === 'Escape') { cancelEdit(id); }
+}
+
+function finishEdit(id) {
+  const inp = document.getElementById('edit-input-' + id);
+  if (!inp) return;
+  const newText = inp.value.trim();
+  if (newText) {
+    const item = items.find(i => i.id === id);
+    if (item) { item.text = newText; save(); }
+  }
+  render();
+}
+
+function cancelEdit(id) {
+  render(); // 그냥 원래대로 다시 그림
+}
+
 // 동그라미 클릭 → 진행 중 토글
 function toggleInProgress(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
-  if (item.status === 'inprogress') {
-    item.status = 'none';
-  } else {
-    item.status = 'inprogress';  // done 상태에서도 진행 중으로 되돌릴 수 있음
-  }
+  item.status = item.status === 'inprogress' ? 'none' : 'inprogress';
   save(); render();
 }
 
@@ -309,11 +356,7 @@ function toggleInProgress(id) {
 function toggleDone(id) {
   const item = items.find(i => i.id === id);
   if (!item) return;
-  if (item.status === 'done') {
-    item.status = 'none';
-  } else {
-    item.status = 'done';
-  }
+  item.status = item.status === 'done' ? 'none' : 'done';
   save(); render();
 }
 
@@ -337,15 +380,15 @@ function getVisible() {
   });
 }
 
-// 경과일 기반 색상 클래스 반환 (완료/진행 중 항목엔 적용 안 함)
+// 경과일 기반 색상 클래스 반환
 function getAgedClass(item) {
   if (item.status === 'done' || item.status === 'inprogress') return '';
   const dateStr = item.createdAtISO || null;
   if (!dateStr) return '';
   const created = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor((today - created) / (1000 * 60 * 60 * 24));
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((now - created) / (1000 * 60 * 60 * 24));
   if (diffDays >= 30) return 'aged-1m';
   if (diffDays >= 14) return 'aged-2w';
   if (diffDays >= 7)  return 'aged-1w';
@@ -393,7 +436,13 @@ function render() {
       </div>
       <div class="item-body">
         <div class="item-title-row">
-          <div class="item-text">${escapeHtml(item.text)}</div>
+          <div class="item-text" id="item-text-${item.id}"
+            ondblclick="startEdit('${item.id}')"
+            ontouchstart="handleTouchStart('${item.id}')"
+            ontouchend="handleTouchEnd()"
+            title="더블클릭하여 수정">
+            ${escapeHtml(item.text)}
+          </div>
           ${item.createdAt ? `<span class="item-date">${item.createdAt}</span>` : ''}
         </div>
         <div class="item-meta">
@@ -403,6 +452,15 @@ function render() {
       <button class="perm-del-btn" onclick="permDeleteItem('${item.id}','${escapeHtml(item.text)}')">삭제</button>
     </div>
   `}).join('');
+}
+
+// 모바일: 길게 누르기(700ms) → 편집
+let touchTimer = null;
+function handleTouchStart(id) {
+  touchTimer = setTimeout(() => { startEdit(id); }, 700);
+}
+function handleTouchEnd() {
+  clearTimeout(touchTimer);
 }
 
 function save() {
@@ -420,7 +478,6 @@ function load() {
         const d = doc.data();
         if (d.categories) categories = d.categories;
         if (d.items) {
-          // 구버전(done: boolean) → 신버전(status: string) 마이그레이션
           items = d.items.map(it => {
             if (it.status === undefined) {
               return { ...it, status: it.done ? 'done' : 'none' };
